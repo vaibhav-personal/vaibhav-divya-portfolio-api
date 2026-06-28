@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+
+# environment variables
+.env
+.env.local
+
+# uploads
+uploads/*
+!uploads/.gitkeep
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# editor settings
+.vscode/
+
+# temporary files
+tmp/
+temp/
+
+# cache
+.cache/
+
+# build files
+dist/
+build/
+
+# coverage
+coverage/
+
+# runtime
+pids
+*.pid
+*.seed
+*.pid.lock
