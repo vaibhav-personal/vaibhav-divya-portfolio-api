@@ -5,6 +5,11 @@ node_modules/
 .env
 .env.local
 
+
+uploads/temp/*
+
+
+
 # logs
 logs
 *.log
