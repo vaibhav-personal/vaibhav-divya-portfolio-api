@@ -1,7 +1,10 @@
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
+
 const connectDB = require("./config/db");
+
 const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contact");
 const analyticsRoutes = require("./routes/analytics");
@@ -19,15 +22,28 @@ const healthRoutes = require("./routes/health");
 
 const app = express();
 
-//Database
+// DATABASE CONNECTION
 connectDB();
 
-//Middleware
-app.use(cors());
+// MIDDLEWARE
+app.use(
+  cors({
+    origin: ["http://localhost:3000", process.env.CLIENT_URL],
+
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
+
 app.use("/uploads", express.static("uploads"));
 
-//Routes
+// ROOT ROUTE
+app.get("/", (req, res) => {
+  res.send("Portfolio API Running 🚀");
+});
+
+// API ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/contact", contactRoutes);
@@ -43,8 +59,8 @@ app.use("/api/hero", heroRoutes);
 app.use("/api/system-status", systemStatusRoutes);
 app.use("/api/health", healthRoutes);
 
-//Server
-const PORT = 5000;
+// SERVER
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
