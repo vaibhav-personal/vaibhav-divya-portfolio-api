@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const connectDB = require("./config/db");
 
@@ -36,7 +37,7 @@ app.use(
 
 app.use(express.json());
 
-app.use("/uploads", express.static("uploads"));
+app.use( "/uploads", express.static( path.join(__dirname, "uploads") ) );
 
 // ROOT ROUTE
 app.get("/", (req, res) => {
