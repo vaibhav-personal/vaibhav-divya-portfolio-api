@@ -4,23 +4,34 @@ const router = express.Router();
 
 const multer = require("multer");
 
-const path = require("path");
+const cloudinary = require("cloudinary").v2;
 
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const Resume = require("../models/Resume");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
-// MULTER STORAGE
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/resume");
-  },
+// CLOUDINARY CONFIG
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
 
-  filename: function (req, file, cb) {
-    cb(null, "Vaibhav_Divya_Resume.pdf");
-  },
+  api_key: process.env.CLOUD_API_KEY,
+
+  api_secret: process.env.CLOUD_API_SECRET,
+});
+
+// CLOUDINARY STORAGE
+const storage = new CloudinaryStorage({
+  cloudinary,
+
+  params: async (req, file) => ({
+    folder: "portfolio-resume",
+
+    resource_type: "raw",
+
+    public_id: "Vaibhav_Divya_Resume",
+  }),
 });
 
 const upload = multer({
@@ -43,8 +54,8 @@ router.post(
         });
       }
 
-      // FILE URL
-      const resumeUrl = `${process.env.BASE_URL}/uploads/resume/Vaibhav_Divya_Resume.pdf`;
+      // CLOUDINARY FILE URL
+      const resumeUrl = req.file.path;
 
       // REMOVE OLD DATA
       await Resume.deleteMany();
@@ -72,57 +83,45 @@ router.post(
 );
 
 // GET RESUME
-router.get(
-  "/",
+router.get("/", async (req, res) => {
+  try {
+    const resume = await Resume.findOne().sort({
+      createdAt: -1,
+    });
 
-  async (req, res) => {
-    try {
-      const resume = await Resume.findOne().sort({
-        createdAt: -1,
-      });
+    res.json(resume);
+  } catch (error) {
+    console.log(error);
 
-      res.json(resume);
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        error: "Server Error",
-      });
-    }
-  },
-);
+    res.status(500).json({
+      error: "Server Error",
+    });
+  }
+});
 
 // DOWNLOAD RESUME
-router.get(
-  "/download",
+router.get("/download", async (req, res) => {
+  try {
+    const resume = await Resume.findOne().sort({
+      createdAt: -1,
+    });
 
-  async (req, res) => {
-    try {
-      const filePath = path.join(
-        __dirname,
-
-        "../uploads/resume/Vaibhav_Divya_Resume.pdf",
-      );
-
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({
-          error: "Resume not found",
-        });
-      }
-
-      res.download(
-        filePath,
-
-        "Vaibhav_Divya_Resume.pdf",
-      );
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).json({
-        error: "Download failed",
+    if (!resume) {
+      return res.status(404).json({
+        error: "Resume not found",
       });
     }
-  },
-);
+
+    res.json({
+      downloadUrl: resume.resumeUrl,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      error: "Download failed",
+    });
+  }
+});
 
 module.exports = router;
