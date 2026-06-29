@@ -4,34 +4,23 @@ const router = express.Router();
 
 const multer = require("multer");
 
-const cloudinary = require("cloudinary").v2;
+const path = require("path");
 
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const fs = require("fs");
 
 const Resume = require("../models/Resume");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
-// CLOUDINARY CONFIG
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
+// MULTER STORAGE
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/resume");
+  },
 
-  api_key: process.env.CLOUD_API_KEY,
-
-  api_secret: process.env.CLOUD_API_SECRET,
-});
-
-// CLOUDINARY STORAGE
-const storage = new CloudinaryStorage({
-  cloudinary,
-
-  params: async (req, file) => ({
-    folder: "portfolio-resume",
-
-    resource_type: "raw",
-
-    public_id: "Vaibhav_Divya_Resume",
-  }),
+  filename: function (req, file, cb) {
+    cb(null, "Vaibhav_Divya_Resume.pdf");
+  },
 });
 
 const upload = multer({
@@ -54,8 +43,8 @@ router.post(
         });
       }
 
-      // CLOUDINARY FILE URL
-      const resumeUrl = req.file.path;
+      // FILE URL
+      const resumeUrl = `${process.env.BASE_URL}/uploads/resume/Vaibhav_Divya_Resume.pdf`;
 
       // REMOVE OLD DATA
       await Resume.deleteMany();
@@ -83,45 +72,57 @@ router.post(
 );
 
 // GET RESUME
-router.get("/", async (req, res) => {
-  try {
-    const resume = await Resume.findOne().sort({
-      createdAt: -1,
-    });
+router.get(
+  "/",
 
-    res.json(resume);
-  } catch (error) {
-    console.log(error);
+  async (req, res) => {
+    try {
+      const resume = await Resume.findOne().sort({
+        createdAt: -1,
+      });
 
-    res.status(500).json({
-      error: "Server Error",
-    });
-  }
-});
+      res.json(resume);
+    } catch (error) {
+      console.log(error);
 
-// DOWNLOAD RESUME
-router.get("/download", async (req, res) => {
-  try {
-    const resume = await Resume.findOne().sort({
-      createdAt: -1,
-    });
-
-    if (!resume) {
-      return res.status(404).json({
-        error: "Resume not found",
+      res.status(500).json({
+        error: "Server Error",
       });
     }
+  },
+);
 
-    res.json({
-      downloadUrl: resume.resumeUrl,
-    });
-  } catch (error) {
-    console.log(error);
+// DOWNLOAD RESUME
+router.get(
+  "/download",
 
-    res.status(500).json({
-      error: "Download failed",
-    });
-  }
-});
+  async (req, res) => {
+    try {
+      const filePath = path.join(
+        __dirname,
+
+        "../uploads/resume/Vaibhav_Divya_Resume.pdf",
+      );
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+          error: "Resume not found",
+        });
+      }
+
+      res.download(
+        filePath,
+
+        "Vaibhav_Divya_Resume.pdf",
+      );
+    } catch (error) {
+      console.log(error);
+
+      res.status(500).json({
+        error: "Download failed",
+      });
+    }
+  },
+);
 
 module.exports = router;
