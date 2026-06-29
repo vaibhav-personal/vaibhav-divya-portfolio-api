@@ -6,10 +6,22 @@ const nodemailer = require("nodemailer");
 
 // EMAIL TRANSPORTER
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  service: "gmail",
+
+  auth: {
+    user: process.env.EMAIL_USER,
+
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// VERIFY EMAIL CONNECTION
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("Email Error:", error);
+  } else {
+    console.log("Email Server Ready");
+  }
 });
 
 // CREATE MESSAGE
@@ -36,8 +48,9 @@ router.post("/", async (req, res) => {
       subject: `New Portfolio Message from ${name}`,
 
       html: `
-
-          <h2>
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          
+          <h2 style="color: #06b6d4;">
             New Contact Message
           </h2>
 
@@ -61,7 +74,8 @@ router.post("/", async (req, res) => {
             ${message}
           </p>
 
-        `,
+        </div>
+      `,
     });
 
     res.json({
