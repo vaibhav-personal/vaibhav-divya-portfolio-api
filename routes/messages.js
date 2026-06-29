@@ -1,7 +1,11 @@
 const express = require("express");
+
 const router = express.Router();
+
 const Message = require("../models/Message");
+
 const authMiddleware = require("../middleware/authMiddleware");
+
 const nodemailer = require("nodemailer");
 
 // EMAIL TRANSPORTER
