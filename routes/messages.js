@@ -6,27 +6,10 @@ const Message = require("../models/Message");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
 // EMAIL TRANSPORTER
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-
-  auth: {
-    user: process.env.EMAIL_USER,
-
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-// VERIFY EMAIL CONNECTION
-transporter.verify((error, success) => {
-  if (error) {
-    console.log("Email Error:", error);
-  } else {
-    console.log("Email Server Ready");
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // CREATE MESSAGE
 router.post("/", async (req, res) => {
@@ -44,42 +27,24 @@ router.post("/", async (req, res) => {
     await newMessage.save();
 
     // SEND EMAIL
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
 
-      to: process.env.EMAIL_USER,
+      to: "vaibhav.divya2202@gmail.com",
 
       subject: `New Portfolio Message from ${name}`,
 
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          
-          <h2 style="color: #06b6d4;">
-            New Contact Message
-          </h2>
+    <h2>New Contact Message</h2>
 
-          <p>
-            <strong>Name:</strong>
-            ${name}
-          </p>
+    <p><strong>Name:</strong> ${name}</p>
 
-          <p>
-            <strong>Email:</strong>
-            ${email}
-          </p>
+    <p><strong>Email:</strong> ${email}</p>
 
-          <p>
-            <strong>Subject:</strong>
-            ${subject}
-          </p>
+    <p><strong>Subject:</strong> ${subject}</p>
 
-          <p>
-            <strong>Message:</strong>
-            ${message}
-          </p>
-
-        </div>
-      `,
+    <p><strong>Message:</strong> ${message}</p>
+  `,
     });
 
     res.json({
